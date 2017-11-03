@@ -9,4 +9,4 @@
 #SBATCH --export=ALL
 #$ -cwd
 
-snakemake -p -j 999 --cluster-config slurm_cluster.json --cluster "sbatch --export=ALL -A {cluster.account} -n {cluster.n} -t {cluster.time} -w 'sgiuv300-srcf-d10-01'"
+snakemake -p -j 999 --cluster-config slurm_cluster.json --cluster "sbatch --export=ALL -A {cluster.account} -n {cluster.n} -t {cluster.time} -w 'sgiuv300-srcf-d10-01' --output=mustache.out"

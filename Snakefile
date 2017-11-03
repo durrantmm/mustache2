@@ -80,7 +80,7 @@ rule bowtie_align_genome:
         config['bowtie2_threads']
     shell:
         "bowtie2 -x {input.genome} -1 {input.fq1} -2 {input.fq2} --met-file {output.met} -X 5000 "
-        "-S {output.sam} --local --quiet --reorder; "
+        "-S {output.sam} --local --quiet --reorder -p {threads}; "
         "grep -v -P '^[^\t]+\t[^\t]+\t\*' {output.sam} >> {output.sam}.tmp; "
         "mv {output.sam}.tmp {output.sam}"
 
@@ -102,7 +102,7 @@ rule bowtie_align_insertseq:
         config['bowtie2_threads']
     shell:
         "bowtie2 -x {input.genome} -1 {input.fq1} -2 {input.fq2} --met-file {output.met} -X 5000 "
-        "-S {output.sam} --local --quiet --reorder; "
+        "-S {output.sam} --local --quiet --reorder -p {threads}; "
         "grep -v -P '^[^\t]+\t[^\t]+\t\*' {output.sam} > {output.sam}.tmp; "
         "mv {output.sam}.tmp {output.sam}"
 
