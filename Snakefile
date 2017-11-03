@@ -75,14 +75,16 @@ rule bowtie_align_genome:
         in6="%s/{genome}.fasta.rev.2.bt2" % GENOME_DIR
     output:
         sam = "%s/{sample}.{genome}.sam" % GENOME_ALIGNMENT_DIR,
-        met = "%s/{sample}.{genome}.metrics.txt" % GENOME_ALIGNMENT_DIR
+        met = "%s/{sample}.{genome}.metrics.txt" % GENOME_ALIGNMENT_DIR,
+        complete = "%s/{sample}.{genome}.complete" % GENOME_ALIGNMENT_DIR
     threads:
         config['bowtie2_threads']
     shell:
         "bowtie2 -x {input.genome} -1 {input.fq1} -2 {input.fq2} --met-file {output.met} -X 5000 "
         "-S {output.sam} --local --quiet --reorder -p {threads}; "
         "grep -v -P '^[^\t]+\t[^\t]+\t\*' {output.sam} >> {output.sam}.tmp; "
-        "mv {output.sam}.tmp {output.sam}"
+        "mv {output.sam}.tmp {output.sam}; "
+        "echo 'COMPLETE' > {output.complete}"
 
 rule bowtie_align_insertseq:
     input:
@@ -97,14 +99,16 @@ rule bowtie_align_insertseq:
         in6="%s/{insertseq}.fasta.rev.2.bt2" % INSERTSEQ_DIR
     output:
         sam = "%s/{sample}.{insertseq}.sam" % INSERTSEQ_ALIGNMENT_DIR,
-        met = "%s/{sample}.{insertseq}.metrics.txt" % INSERTSEQ_ALIGNMENT_DIR
+        met = "%s/{sample}.{insertseq}.metrics.txt" % INSERTSEQ_ALIGNMENT_DIR,
+        complete = "%s/{sample}.{insertseq}.complete" % INSERTSEQ_ALIGNMENT_DIR
     threads:
         config['bowtie2_threads']
     shell:
         "bowtie2 -x {input.genome} -1 {input.fq1} -2 {input.fq2} --met-file {output.met} -X 5000 "
         "-S {output.sam} --local --quiet --reorder -p {threads}; "
         "grep -v -P '^[^\t]+\t[^\t]+\t\*' {output.sam} > {output.sam}.tmp; "
-        "mv {output.sam}.tmp {output.sam}"
+        "mv {output.sam}.tmp {output.sam}; "
+        "echo 'COMPLETE' > {output.complete}"
 
 rule get_insertseq_flanks:
     input:
@@ -115,7 +119,9 @@ rule get_insertseq_flanks:
         genome_sam = "%s/{sample}.{genome}.sam" % GENOME_ALIGNMENT_DIR,
         genome_met = "%s/{sample}.{genome}.metrics.txt" % GENOME_ALIGNMENT_DIR,
         insertseq_sam = "%s/{sample}.{insertseq}.sam" % INSERTSEQ_ALIGNMENT_DIR,
-        insertseq_met = "%s/{sample}.{insertseq}.metrics.txt" % INSERTSEQ_ALIGNMENT_DIR
+        insertseq_met = "%s/{sample}.{insertseq}.metrics.txt" % INSERTSEQ_ALIGNMENT_DIR,
+        complete_genome = "%s/{sample}.{genome}.complete" % GENOME_ALIGNMENT_DIR,
+        complete_insertseq = "%s/{sample}.{genome}.complete" % INSERTSEQ_ALIGNMENT_DIR
     output:
         genome_flanks_sam = "%s/{sample}.{genome}.{insertseq}.flanks.sam" % GENOME_FLANKS_DIR,
         genome_noflanks_sam= "%s/{sample}.{genome}.{insertseq}.noflanks.sam" % GENOME_FLANKS_DIR,
