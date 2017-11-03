@@ -1,0 +1,40 @@
+{
+    "__default__": {
+        "account": "bhatt",
+        "time": "00:15:00",
+        "n": 1,
+        "partition": "core",
+        "mem": "1G"
+    },
+
+    "bowtie_build_genomes": {
+        "mem": "60G",
+        "time": "02:00:00"
+    },
+
+    "bowtie_build_insertseqs": {
+        "mem": "60G",
+        "time": "02:00:00"
+    },
+
+    "bowtie_align_genome": {
+        "mem": "60G",
+        "time": "05:00:00"
+    },
+
+    "get_insertseq_flanks": {
+        "mem": "1G",
+        "time": "05:00:00"
+    },
+
+    "samtools_sort_flank_sams": {
+        "mem": "1G",
+        "time": "03:00:00"
+    },
+
+    "samtools_index_flank_bams": {
+        "mem": "1G",
+        "time": "01:00:00"
+    },
+}
+
