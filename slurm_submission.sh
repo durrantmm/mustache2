@@ -1,7 +1,7 @@
 #!/bin/bash
 #
-#SBATCH --job-name=test
-#SBATCH --output=res.txt
+#SBATCH --job-name=mustache
+#SBATCH --output=mustache.out
 #
 #SBATCH --ntasks=1
 #SBATCH --time=120-00:00:
