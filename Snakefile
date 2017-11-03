@@ -121,7 +121,7 @@ rule get_insertseq_flanks:
         insertseq_sam = "%s/{sample}.{insertseq}.sam" % INSERTSEQ_ALIGNMENT_DIR,
         insertseq_met = "%s/{sample}.{insertseq}.metrics.txt" % INSERTSEQ_ALIGNMENT_DIR,
         complete_genome = "%s/{sample}.{genome}.complete" % GENOME_ALIGNMENT_DIR,
-        complete_insertseq = "%s/{sample}.{genome}.complete" % INSERTSEQ_ALIGNMENT_DIR
+        complete_insertseq = "%s/{sample}.{insertseq}.complete" % INSERTSEQ_ALIGNMENT_DIR
     output:
         genome_flanks_sam = "%s/{sample}.{genome}.{insertseq}.flanks.sam" % GENOME_FLANKS_DIR,
         genome_noflanks_sam= "%s/{sample}.{genome}.{insertseq}.noflanks.sam" % GENOME_FLANKS_DIR,
