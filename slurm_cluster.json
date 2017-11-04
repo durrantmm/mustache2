@@ -18,8 +18,14 @@
     },
 
     "bowtie_align_genome": {
-        "mem": "60G",
+        "mem": "10G",
         "time": "05:00:00",
+        "n": 6
+    },
+
+    "bowtie_align_insertseq": {
+        "mem": "10G",
+        "time": "10:00:00",
         "n": 6
     },
 

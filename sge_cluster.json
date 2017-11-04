@@ -13,13 +13,18 @@
     },
 
     "bowtie_build_insertseqs": {
-        "mem": "60G",
+        "mem": "10G",
         "time": "02:00:00"
     },
 
     "bowtie_align_genome": {
+        "mem": "10G",
+        "time": "10:00:00"
+    },
+
+    "bowtie_align_insertseq": {
         "mem": "60G",
-        "time": "05:00:00"
+        "time": "10:00:00"
     },
 
     "get_insertseq_flanks": {
@@ -29,7 +34,7 @@
 
     "samtools_sort_flank_sams": {
         "mem": "1G",
-        "time": "03:00:00"
+        "time": "05:00:00"
     },
 
     "samtools_index_flank_bams": {
