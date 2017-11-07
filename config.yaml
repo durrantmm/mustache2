@@ -6,6 +6,7 @@ class_dir: 0.class
 insertseq_dir: 0.insertseq
 
 genome_alignment_dir: 1.genome_alignment
+genome_insertsize_stats_dir: 1.genome_insertsize_stats
 insertseq_alignment_dir: 1.insertseq_alignment
 
 genome_flanks_dir: 2.genome_flanks

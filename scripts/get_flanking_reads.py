@@ -94,6 +94,7 @@ def adjust_read_order(gr1, gr2, ir1, ir2, class1, class2):
 
     return out_gr+out_ir
 
+
 def get_flanking_reads(genome_sam_path, insertseq_sam_path, fastq1_path, fastq2_path, class1_path, class2_path,
                        genome_flanks_sam_path, genome_noflanks_sam_path, insertseq_flanks_sam_path,
                        insertseq_noflanks_sam_path):
@@ -158,17 +159,36 @@ def get_flanking_reads(genome_sam_path, insertseq_sam_path, fastq1_path, fastq2_
                 insertseq_flanks_sam.write(ir2)
 
             elif gr1_mapped and gr2_mapped and ir1_mapped and (not ir2_mapped):
+                # print("RIGHT FLANK PRESENT INSERTSEQ")
                 genome_flanks_sam.write(gr2)
                 insertseq_flanks_sam.write(ir1)
 
+            elif gr1_mapped and (not gr2_mapped) and ir1_mapped and ir2_mapped:
+                # print("LEFT FLANK ABSENT INSERTSEQ")
+                genome_flanks_sam.write(gr1)
+                insertseq_flanks_sam.write(ir2)
+
+            elif (not gr1_mapped) and gr2_mapped and ir1_mapped and ir2_mapped:
+                # print("RIGHT FLANK ABSENT INSERTSEQ")
+                genome_flanks_sam.write(gr2)
+                insertseq_flanks_sam.write(ir1)
+            else:
+                # print("Uninterpretable")
+                genome_noflanks_sam.write(gr1)
+                genome_noflanks_sam.write(gr2)
+                insertseq_noflanks_sam.write(ir1)
+                insertseq_noflanks_sam.write(ir2)
+
             genome_reads = next(genome_sam)
             insertseq_reads = next(insertseq_sam)
+
 
         elif c1.name == genome_reads.r1.query_name:
             gr1, gr2 = add_taxon(genome_reads.r1, genome_reads.r2, c1, c2)
             genome_noflanks_sam.write(gr1)
             genome_noflanks_sam.write(gr2)
             genome_reads = next(genome_sam)
+
 
         elif c1.name == insertseq_reads.r1.query_name:
             ir1, ir2 = add_taxon(insertseq_reads.r1, insertseq_reads.r2, c1, c2)

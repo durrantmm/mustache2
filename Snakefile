@@ -11,6 +11,7 @@ INSERTSEQ_DIR = os.path.join(OUTPUT_DIR, config['insertseq_dir'])
 
 GENOME_ALIGNMENT_DIR = os.path.join(OUTPUT_DIR, config['genome_alignment_dir'])
 INSERTSEQ_ALIGNMENT_DIR = os.path.join(OUTPUT_DIR, config['insertseq_alignment_dir'])
+GENOME_INSERTSIZE_STATS = os.path.join(OUTPUT_DIR, config['genome_insertsize_stats_dir'])
 
 GENOME_FLANKS_DIR = os.path.join(OUTPUT_DIR, config['genome_flanks_dir'])
 INSERTSEQ_FLANKS_DIR = os.path.join(OUTPUT_DIR, config['insertseq_flanks_dir'])
@@ -33,8 +34,8 @@ rule all:
         expand("%s/{sample}.{genome}.{insertseq}.flanks.bam.bai" % GENOME_FLANKS_DIR, sample=SAMPLES, genome=GENOMES, insertseq=INSERTSEQS),
         expand("%s/{sample}.{genome}.{insertseq}.noflanks.bam.bai" % GENOME_FLANKS_DIR, sample=SAMPLES, genome=GENOMES, insertseq=INSERTSEQS),
         expand("%s/{sample}.{genome}.{insertseq}.flanks.bam.bai" % INSERTSEQ_FLANKS_DIR, sample=SAMPLES, genome=GENOMES, insertseq=INSERTSEQS),
-        expand("%s/{sample}.{genome}.{insertseq}.noflanks.bam.bai" % INSERTSEQ_FLANKS_DIR, sample=SAMPLES, genome=GENOMES, insertseq=INSERTSEQS)
-    
+        expand("%s/{sample}.{genome}.{insertseq}.noflanks.bam.bai" % INSERTSEQ_FLANKS_DIR, sample=SAMPLES, genome=GENOMES, insertseq=INSERTSEQS),
+        expand("%s/{sample}.{genome}.insert_size_metrics.txt" % GENOME_INSERTSIZE_STATS, sample=SAMPLES, genome=GENOMES)
 rule bowtie_build_genomes:
     input:
         "%s/{genome}.fasta" % GENOME_DIR
@@ -109,6 +110,19 @@ rule bowtie_align_insertseq:
         "grep -v -P '^[^\t]+\t[^\t]+\t\*' {output.sam} > {output.sam}.tmp; "
         "mv {output.sam}.tmp {output.sam}; "
         "echo 'COMPLETE' > {output.complete}"
+
+rule get_genome_insert_size_stats:
+    input:
+        genome_sam = "%s/{sample}.{genome}.sam" % GENOME_ALIGNMENT_DIR
+    output:
+        stats = "%s/{sample}.{genome}.insert_size_metrics.txt" % GENOME_INSERTSIZE_STATS,
+        pdf = "%s/{sample}.{genome}.insert_size_histogram.pdf" % GENOME_INSERTSIZE_STATS
+    shell:
+        "java -jar picard.jar CollectInsertSizeMetrics "
+        "I={input.genome_sam} "
+        "O={output.stats} "
+        "H={output.pdf} "
+        "M=0.5"
 
 rule get_insertseq_flanks:
     input:
