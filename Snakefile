@@ -35,7 +35,8 @@ rule all:
         expand("%s/{sample}.{genome}.{insertseq}.noflanks.bam.bai" % GENOME_FLANKS_DIR, sample=SAMPLES, genome=GENOMES, insertseq=INSERTSEQS),
         expand("%s/{sample}.{genome}.{insertseq}.flanks.bam.bai" % INSERTSEQ_FLANKS_DIR, sample=SAMPLES, genome=GENOMES, insertseq=INSERTSEQS),
         expand("%s/{sample}.{genome}.{insertseq}.noflanks.bam.bai" % INSERTSEQ_FLANKS_DIR, sample=SAMPLES, genome=GENOMES, insertseq=INSERTSEQS),
-        expand("%s/{sample}.{genome}.insert_size_metrics.txt" % GENOME_INSERTSIZE_STATS, sample=SAMPLES, genome=GENOMES)
+        expand("%s/{sample}.{genome}.{insertseq}.insert_size_metrics.txt" % GENOME_INSERTSIZE_STATS, sample=SAMPLES, genome=GENOMES, insertseq=INSERTSEQS)
+
 rule bowtie_build_genomes:
     input:
         "%s/{genome}.fasta" % GENOME_DIR
@@ -111,23 +112,8 @@ rule bowtie_align_insertseq:
         "mv {output.sam}.tmp {output.sam}; "
         "echo 'COMPLETE' > {output.complete}"
 
-rule get_genome_insert_size_stats:
-    input:
-        genome_sam = "%s/{sample}.{genome}.sam" % GENOME_ALIGNMENT_DIR
-    output:
-        stats = "%s/{sample}.{genome}.insert_size_metrics.txt" % GENOME_INSERTSIZE_STATS,
-        pdf = "%s/{sample}.{genome}.insert_size_histogram.pdf" % GENOME_INSERTSIZE_STATS
-    shell:
-        "java -jar picard.jar CollectInsertSizeMetrics "
-        "I={input.genome_sam} "
-        "O={output.stats} "
-        "H={output.pdf} "
-        "M=0.5"
-
 rule get_insertseq_flanks:
     input:
-        fq1="%s/{sample}.R1.fq.gz" % FASTQ_DIR,
-        fq2="%s/{sample}.R2.fq.gz" % FASTQ_DIR,
         class1 = "%s/{sample}.R1.class.gz" % CLASS_DIR,
         class2 = "%s/{sample}.R2.class.gz" % CLASS_DIR,
         genome_sam = "%s/{sample}.{genome}.sam" % GENOME_ALIGNMENT_DIR,
@@ -138,44 +124,73 @@ rule get_insertseq_flanks:
         complete_insertseq = "%s/{sample}.{insertseq}.complete" % INSERTSEQ_ALIGNMENT_DIR
     output:
         genome_flanks_sam = "%s/{sample}.{genome}.{insertseq}.flanks.sam" % GENOME_FLANKS_DIR,
+        genome_flanks_mate_sam = "%s/{sample}.{genome}.{insertseq}.flankmates.sam" % GENOME_FLANKS_DIR,
         genome_noflanks_sam= "%s/{sample}.{genome}.{insertseq}.noflanks.sam" % GENOME_FLANKS_DIR,
         insertseq_flanks_sam = "%s/{sample}.{genome}.{insertseq}.flanks.sam" % INSERTSEQ_FLANKS_DIR,
+        insertseq_flanks_mate_sam = "%s/{sample}.{genome}.{insertseq}.flankmates.sam" % INSERTSEQ_FLANKS_DIR,
         insertseq_noflanks_sam = "%s/{sample}.{genome}.{insertseq}.noflanks.sam" % INSERTSEQ_FLANKS_DIR
+    params:
+        sample='{sample}'
     shell:
-        "python scripts/get_flanking_reads.py {input.genome_sam} {input.insertseq_sam} {input.fq1} {input.fq2} "
-        "{input.class1} {input.class2} {output.genome_flanks_sam} {output.genome_noflanks_sam} "
-        "{output.insertseq_flanks_sam} {output.insertseq_noflanks_sam}"
+        "python scripts/get_flanking_reads.py {input.genome_sam} {input.insertseq_sam} "
+        "{input.class1} {input.class2} {output.genome_flanks_sam} {output.genome_flanks_mate_sam} {output.genome_noflanks_sam} "
+        "{output.insertseq_flanks_sam} {output.insertseq_flanks_mate_sam} {output.insertseq_noflanks_sam} {params.sample}"
 
 rule samtools_sort_flank_sams:
     input:
         genome_flanks_sam = "%s/{sample}.{genome}.{insertseq}.flanks.sam" % GENOME_FLANKS_DIR,
+        genome_flanks_mate_sam = "%s/{sample}.{genome}.{insertseq}.flankmates.sam" % GENOME_FLANKS_DIR,
         genome_noflanks_sam= "%s/{sample}.{genome}.{insertseq}.noflanks.sam" % GENOME_FLANKS_DIR,
         insertseq_flanks_sam = "%s/{sample}.{genome}.{insertseq}.flanks.sam" % INSERTSEQ_FLANKS_DIR,
+        insertseq_flanks_mate_sam = "%s/{sample}.{genome}.{insertseq}.flankmates.sam" % INSERTSEQ_FLANKS_DIR,
         insertseq_noflanks_sam = "%s/{sample}.{genome}.{insertseq}.noflanks.sam" % INSERTSEQ_FLANKS_DIR
     output:
         genome_flanks_bam = "%s/{sample}.{genome}.{insertseq}.flanks.bam" % GENOME_FLANKS_DIR,
+        genome_flanks_mate_bam = "%s/{sample}.{genome}.{insertseq}.flankmates.bam" % GENOME_FLANKS_DIR,
         genome_noflanks_bam= "%s/{sample}.{genome}.{insertseq}.noflanks.bam" % GENOME_FLANKS_DIR,
         insertseq_flanks_bam = "%s/{sample}.{genome}.{insertseq}.flanks.bam" % INSERTSEQ_FLANKS_DIR,
+        insertseq_flanks_mate_bam = "%s/{sample}.{genome}.{insertseq}.flankmates.bam" % INSERTSEQ_FLANKS_DIR,
         insertseq_noflanks_bam = "%s/{sample}.{genome}.{insertseq}.noflanks.bam" % INSERTSEQ_FLANKS_DIR
     shell:
         "samtools sort {input.genome_flanks_sam} > {output.genome_flanks_bam}; "
+        "samtools sort {input.genome_flanks_mate_sam} > {output.genome_flanks_mate_bam}; "
         "samtools sort {input.genome_noflanks_sam} > {output.genome_noflanks_bam}; "
         "samtools sort {input.insertseq_flanks_sam} > {output.insertseq_flanks_bam}; "
+        "samtools sort {input.insertseq_flanks_mate_sam} > {output.insertseq_flanks_mate_bam}; "
         "samtools sort {input.insertseq_noflanks_sam} > {output.insertseq_noflanks_bam};"
 
 rule samtools_index_flank_bams:
     input:
         genome_flanks_bam = "%s/{sample}.{genome}.{insertseq}.flanks.bam" % GENOME_FLANKS_DIR,
+        genome_flanks_mate_bam = "%s/{sample}.{genome}.{insertseq}.flankmates.bam" % GENOME_FLANKS_DIR,
         genome_noflanks_bam= "%s/{sample}.{genome}.{insertseq}.noflanks.bam" % GENOME_FLANKS_DIR,
         insertseq_flanks_bam = "%s/{sample}.{genome}.{insertseq}.flanks.bam" % INSERTSEQ_FLANKS_DIR,
+        insertseq_flanks_mate_bam = "%s/{sample}.{genome}.{insertseq}.flankmates.bam" % INSERTSEQ_FLANKS_DIR,
         insertseq_noflanks_bam = "%s/{sample}.{genome}.{insertseq}.noflanks.bam" % INSERTSEQ_FLANKS_DIR
     output:
         genome_flanks_bam_bai = "%s/{sample}.{genome}.{insertseq}.flanks.bam.bai" % GENOME_FLANKS_DIR,
+        genome_flanks_mate_bam_bai = "%s/{sample}.{genome}.{insertseq}.flankmates.bam.bai" % GENOME_FLANKS_DIR,
         genome_noflanks_bam_bai= "%s/{sample}.{genome}.{insertseq}.noflanks.bam.bai" % GENOME_FLANKS_DIR,
         insertseq_flanks_bam_bai = "%s/{sample}.{genome}.{insertseq}.flanks.bam.bai" % INSERTSEQ_FLANKS_DIR,
+        insertseq_flanks_mate_bam_bai = "%s/{sample}.{genome}.{insertseq}.flankmates.bam.bai" % INSERTSEQ_FLANKS_DIR,
         insertseq_noflanks_bam_bai = "%s/{sample}.{genome}.{insertseq}.noflanks.bam.bai" % INSERTSEQ_FLANKS_DIR
     shell:
         "samtools index {input.genome_flanks_bam}; "
+        "samtools index {input.genome_flanks_mate_bam}; "
         "samtools index {input.genome_noflanks_bam}; "
         "samtools index {input.insertseq_flanks_bam}; "
+        "samtools index {input.insertseq_flanks_mate_bam}; "
         "samtools index {input.insertseq_noflanks_bam};"
+
+rule get_genome_insert_size_stats:
+    input:
+        genome_noflanks_bam= "%s/{sample}.{genome}.{insertseq}.noflanks.bam" % GENOME_FLANKS_DIR
+    output:
+        stats = "%s/{sample}.{genome}.{insertseq}.insert_size_metrics.txt" % GENOME_INSERTSIZE_STATS,
+        pdf = "%s/{sample}.{genome}.{insertseq}.insert_size_histogram.pdf" % GENOME_INSERTSIZE_STATS
+    shell:
+        "java -jar picard.jar CollectInsertSizeMetrics "
+        "I={input.genome_noflanks_bam} "
+        "O={output.stats} "
+        "H={output.pdf} "
+        "M=0.5"
