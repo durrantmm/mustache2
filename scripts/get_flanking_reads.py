@@ -785,13 +785,21 @@ def get_flanking_reads(genome_sam_path, insertseq_sam_path, class1_path, class2_
 
         elif genome_reads_match(c1, genome_reads):
             #print("GENOME READS MATCH")
-            genome_reads = next(genome_sam)
+            gr1.set_tag('TX', c1.taxon), gr2.set_tag('TX', c2.taxon)
+            gr1.set_tag('SP', sample), gr2.set_tag('SP', sample)
 
+            genome_noflanks_sam.write(gr1)
+            genome_noflanks_sam.write(gr2)
+            genome_reads = next(genome_sam)
 
         elif insertseq_reads_match(c1, insertseq_reads):
             #print("INSERTSEQ READS MATCH")
-            insertseq_reads = next(insertseq_sam)
+            ir1.set_tag('TX', c1.taxon), ir2.set_tag('TX', c2.taxon)
+            ir1.set_tag('SP', sample), ir2.set_tag('SP', sample)
 
+            insertseq_noflanks_sam.write(ir1)
+            insertseq_noflanks_sam.write(ir2)
+            insertseq_reads = next(insertseq_sam)
 
     print("Reads Processed:", count)
 
