@@ -25,17 +25,16 @@ def main():
     print("Getting insert size stats for %s" % sample)
     sam = read_sam_pairs(sam_path)
 
-    counts = [0]*1000
+    counts = [0]*1001
     tlen_list = list()
 
     for reads in sam:
 
-        try:
-            if abs(reads.r1.tlen) > 0:
-                tlen_list.append(abs(reads.r1.tlen))
-            counts[abs(reads.r1.tlen)] += 1
-        except:
+        if abs(reads.r1.tlen) == 0 or abs(reads.r1.tlen) > 1000:
             counts[0] += 1
+        else:
+            tlen_list.append(abs(reads.r1.tlen))
+            counts[abs(reads.r1.tlen)] += 1
 
     with open(metrics_path, 'w') as out:
         out.write('\t'.join([sample, 'MEAN', str(mean(tlen_list))])+'\n')
