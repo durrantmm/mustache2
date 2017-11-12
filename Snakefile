@@ -31,11 +31,11 @@ print(INSERTSEQS)
 
 rule all:
     input:
-        expand("%s/{sample}.{genome}.insert_size_metrics.tsv" % GENOME_INSERTSIZE_STATS, sample=SAMPLES, genome=GENOMES)
-        #expand("%s/{sample}.{genome}.{insertseq}.flanks.bam.bai" % GENOME_FLANKS_DIR, sample=SAMPLES, genome=GENOMES, insertseq=INSERTSEQS),
-        #expand("%s/{sample}.{genome}.{insertseq}.noflanks.bam.bai" % GENOME_FLANKS_DIR, sample=SAMPLES, genome=GENOMES, insertseq=INSERTSEQS),
-        #expand("%s/{sample}.{genome}.{insertseq}.flanks.bam.bai" % INSERTSEQ_FLANKS_DIR, sample=SAMPLES, genome=GENOMES, insertseq=INSERTSEQS),
-        #expand("%s/{sample}.{genome}.{insertseq}.noflanks.bam.bai" % INSERTSEQ_FLANKS_DIR, sample=SAMPLES, genome=GENOMES, insertseq=INSERTSEQS),
+        expand("%s/{sample}.{genome}.insert_size_metrics.tsv" % GENOME_INSERTSIZE_STATS, sample=SAMPLES, genome=GENOMES),
+        expand("%s/{sample}.{genome}.{insertseq}.flanks.bam.bai" % GENOME_FLANKS_DIR, sample=SAMPLES, genome=GENOMES, insertseq=INSERTSEQS),
+        expand("%s/{sample}.{genome}.{insertseq}.noflanks.bam.bai" % GENOME_FLANKS_DIR, sample=SAMPLES, genome=GENOMES, insertseq=INSERTSEQS),
+        expand("%s/{sample}.{genome}.{insertseq}.flanks.bam.bai" % INSERTSEQ_FLANKS_DIR, sample=SAMPLES, genome=GENOMES, insertseq=INSERTSEQS),
+        expand("%s/{sample}.{genome}.{insertseq}.noflanks.bam.bai" % INSERTSEQ_FLANKS_DIR, sample=SAMPLES, genome=GENOMES, insertseq=INSERTSEQS),
         #expand("%s/{sample}.{genome}.{insertseq}.insert_size_metrics.txt" % GENOME_INSERTSIZE_STATS, sample=SAMPLES, genome=GENOMES, insertseq=INSERTSEQS)
         #expand("%s/{sample}.{genome}.complete" % GENOME_ALIGNMENT_DIR, sample=SAMPLES, genome=GENOMES),
 
@@ -136,41 +136,32 @@ rule get_insertseq_flanks:
         complete_genome = "%s/{sample}.{genome}.complete" % GENOME_ALIGNMENT_DIR,
         complete_insertseq = "%s/{sample}.{insertseq}.complete" % INSERTSEQ_ALIGNMENT_DIR
     output:
-        genome_flanks_sam = "%s/{sample}.{genome}.{insertseq}.flanks.sam" % GENOME_FLANKS_DIR,
-        genome_flanks_mate_sam = "%s/{sample}.{genome}.{insertseq}.flankmates.sam" % GENOME_FLANKS_DIR,
-        genome_noflanks_sam= "%s/{sample}.{genome}.{insertseq}.noflanks.sam" % GENOME_FLANKS_DIR,
-        insertseq_flanks_sam = "%s/{sample}.{genome}.{insertseq}.flanks.sam" % INSERTSEQ_FLANKS_DIR,
-        insertseq_flanks_mate_sam = "%s/{sample}.{genome}.{insertseq}.flankmates.sam" % INSERTSEQ_FLANKS_DIR,
-        insertseq_noflanks_sam = "%s/{sample}.{genome}.{insertseq}.noflanks.sam" % INSERTSEQ_FLANKS_DIR
-    params:
-        sample='{sample}'
-    shell:
-        "python scripts/get_flanking_reads.py {input.genome_sam} {input.insertseq_sam} "
-        "{input.class1} {input.class2} {output.genome_flanks_sam} {output.genome_flanks_mate_sam} {output.genome_noflanks_sam} "
-        "{output.insertseq_flanks_sam} {output.insertseq_flanks_mate_sam} {output.insertseq_noflanks_sam} {params.sample}"
-
-rule samtools_sort_flank_sams:
-    input:
-        genome_flanks_sam = "%s/{sample}.{genome}.{insertseq}.flanks.sam" % GENOME_FLANKS_DIR,
-        genome_flanks_mate_sam = "%s/{sample}.{genome}.{insertseq}.flankmates.sam" % GENOME_FLANKS_DIR,
-        genome_noflanks_sam= "%s/{sample}.{genome}.{insertseq}.noflanks.sam" % GENOME_FLANKS_DIR,
-        insertseq_flanks_sam = "%s/{sample}.{genome}.{insertseq}.flanks.sam" % INSERTSEQ_FLANKS_DIR,
-        insertseq_flanks_mate_sam = "%s/{sample}.{genome}.{insertseq}.flankmates.sam" % INSERTSEQ_FLANKS_DIR,
-        insertseq_noflanks_sam = "%s/{sample}.{genome}.{insertseq}.noflanks.sam" % INSERTSEQ_FLANKS_DIR
-    output:
         genome_flanks_bam = "%s/{sample}.{genome}.{insertseq}.flanks.bam" % GENOME_FLANKS_DIR,
         genome_flanks_mate_bam = "%s/{sample}.{genome}.{insertseq}.flankmates.bam" % GENOME_FLANKS_DIR,
         genome_noflanks_bam= "%s/{sample}.{genome}.{insertseq}.noflanks.bam" % GENOME_FLANKS_DIR,
         insertseq_flanks_bam = "%s/{sample}.{genome}.{insertseq}.flanks.bam" % INSERTSEQ_FLANKS_DIR,
         insertseq_flanks_mate_bam = "%s/{sample}.{genome}.{insertseq}.flankmates.bam" % INSERTSEQ_FLANKS_DIR,
         insertseq_noflanks_bam = "%s/{sample}.{genome}.{insertseq}.noflanks.bam" % INSERTSEQ_FLANKS_DIR
+    params:
+        genome_flanks_sam = "%s/{sample}.{genome}.{insertseq}.flanks.sam" % GENOME_FLANKS_DIR,
+        genome_flanks_mate_sam = "%s/{sample}.{genome}.{insertseq}.flankmates.sam" % GENOME_FLANKS_DIR,
+        genome_noflanks_sam= "%s/{sample}.{genome}.{insertseq}.noflanks.sam" % GENOME_FLANKS_DIR,
+        insertseq_flanks_sam = "%s/{sample}.{genome}.{insertseq}.flanks.sam" % INSERTSEQ_FLANKS_DIR,
+        insertseq_flanks_mate_sam = "%s/{sample}.{genome}.{insertseq}.flankmates.sam" % INSERTSEQ_FLANKS_DIR,
+        insertseq_noflanks_sam = "%s/{sample}.{genome}.{insertseq}.noflanks.sam" % INSERTSEQ_FLANKS_DIR,
+        sample='{sample}'
     shell:
-        "samtools sort {input.genome_flanks_sam} > {output.genome_flanks_bam}; "
-        "samtools sort {input.genome_flanks_mate_sam} > {output.genome_flanks_mate_bam}; "
-        "samtools sort {input.genome_noflanks_sam} > {output.genome_noflanks_bam}; "
-        "samtools sort {input.insertseq_flanks_sam} > {output.insertseq_flanks_bam}; "
-        "samtools sort {input.insertseq_flanks_mate_sam} > {output.insertseq_flanks_mate_bam}; "
-        "samtools sort {input.insertseq_noflanks_sam} > {output.insertseq_noflanks_bam};"
+        "python scripts/get_flanking_reads.py {input.genome_sam} {input.insertseq_sam} "
+        "{input.class1} {input.class2} {params.genome_flanks_sam} {params.genome_flanks_mate_sam} {params.genome_noflanks_sam} "
+        "{params.insertseq_flanks_sam} {params.insertseq_flanks_mate_sam} {params.insertseq_noflanks_sam} {params.sample}; "
+        "samtools sort {params.genome_flanks_sam} > {output.genome_flanks_bam}; "
+        "samtools sort {params.genome_flanks_mate_sam} > {output.genome_flanks_mate_bam}; "
+        "samtools sort {params.genome_noflanks_sam} > {output.genome_noflanks_bam}; "
+        "samtools sort {params.insertseq_flanks_sam} > {output.insertseq_flanks_bam}; "
+        "samtools sort {params.insertseq_flanks_mate_sam} > {output.insertseq_flanks_mate_bam}; "
+        "samtools sort {params.insertseq_noflanks_sam} > {output.insertseq_noflanks_bam}; "
+        "rm {params.genome_flanks_sam} {params.genome_flanks_mate_sam} {params.genome_noflanks_sam} "
+        "{params.insertseq_flanks_sam} {params.insertseq_flanks_mate_sam} {params.insertseq_noflanks_sam};"
 
 rule samtools_index_flank_bams:
     input:
