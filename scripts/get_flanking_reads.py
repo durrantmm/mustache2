@@ -95,25 +95,18 @@ def adjust_read_order(gr1, gr2, ir1, ir2, class1, class2):
 
     return out_gr+out_ir
 
-def set_flank_tags(gr1, gr2, ir1, ir2, filter, sample):
-    
-    gr1.set_tag('FL', filter)
-    gr1.set_tag('IS', ir2.reference_name)
-    gr1.set_tag('SP', sample)
+def adjust_read_order_once(r1, r2, class1, class2):
 
-    gr2.set_tag('FL', filter)
-    gr2.set_tag('IS', ir1.reference_name)
-    gr2.set_tag('SP', sample)
+    if r1.is_read1:
+        r1.set_tag('TX', class1.taxon)
+        r2.set_tag('TX', class2.taxon)
+        out_gr = [r1, r2]
+    else:
+        r1.set_tag('TX', class2.taxon)
+        r2.set_tag('TX', class1.taxon)
+        out_gr = [r2, r1]
 
-    ir1.set_tag('FL', filter)
-    ir1.set_tag('GN', gr2.reference_name)
-    ir1.set_tag('SP', sample)
-
-    ir2.set_tag('FL', filter)
-    ir2.set_tag('GN', gr1.reference_name)
-    ir2.set_tag('SP', sample)
-    
-    return gr1, gr2, ir1, ir2
+    return out_gr
 
 def write_to_all_flank_sams(gr1, genome_flanks_sam, gr2, genome_flanks_mate_sam, ir1, insertseq_flanks_sam,
                             ir2, insertseq_flanks_mate_sam):
@@ -149,8 +142,6 @@ def insertseq_reads_match(c1, insertseq_reads):
 def set_final_tags(sample, c1, c2, gr1, gr2, ir1, ir2, scenario):
     gr1.set_tag('SC', scenario), gr2.set_tag('SC', scenario), ir1.set_tag('SC', scenario), ir1.set_tag('SC', scenario)
     gr1.set_tag('SP', sample), gr2.set_tag('SP', sample), ir1.set_tag('SP', sample), ir1.set_tag('SP', sample)
-    gr1.set_tag('TX', c1.taxon), gr2.set_tag('TX', c2.taxon)
-    ir1.set_tag('TX', c1.taxon), ir1.set_tag('SP', c2.taxon)
     gr1.set_tag('IS', ir2.reference_name), gr2.set_tag('IS', ir1.reference_name)
     ir1.set_tag('GN', gr2.reference_name), ir1.set_tag('GN', gr1.reference_name)
 
@@ -691,7 +682,7 @@ def get_flanking_reads(genome_sam_path, insertseq_sam_path, class1_path, class2_
 
         count += 1
 
-
+        #print(c1.name, c2.name, genome_reads.r1.query_name)
         # BEGIN PROCESSING READ INFORMATION
         if all_reads_match(c1, genome_reads, insertseq_reads):
             #print("ALL READS MATCH")
@@ -785,20 +776,22 @@ def get_flanking_reads(genome_sam_path, insertseq_sam_path, class1_path, class2_
 
         elif genome_reads_match(c1, genome_reads):
             #print("GENOME READS MATCH")
-            gr1.set_tag('TX', c1.taxon), gr2.set_tag('TX', c2.taxon)
+            gr1, gr2 = adjust_read_order_once(genome_reads.r1, genome_reads.r2, c1, c2)
             gr1.set_tag('SP', sample), gr2.set_tag('SP', sample)
 
             genome_noflanks_sam.write(gr1)
             genome_noflanks_sam.write(gr2)
+
             genome_reads = next(genome_sam)
 
         elif insertseq_reads_match(c1, insertseq_reads):
             #print("INSERTSEQ READS MATCH")
-            ir1.set_tag('TX', c1.taxon), ir2.set_tag('TX', c2.taxon)
+            ir1, ir2 = adjust_read_order_once(insertseq_reads.r1, insertseq_reads.r2, c1, c2)
             ir1.set_tag('SP', sample), ir2.set_tag('SP', sample)
 
             insertseq_noflanks_sam.write(ir1)
             insertseq_noflanks_sam.write(ir2)
+
             insertseq_reads = next(insertseq_sam)
 
     print("Reads Processed:", count)
