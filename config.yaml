@@ -5,12 +5,11 @@ genome_dir: 0.genome
 class_dir: 0.class
 insertseq_dir: 0.insertseq
 
-genome_alignment_dir: 1.genome_alignment\
+genome_alignment_dir: 1.genome_alignment
 insertseq_alignment_dir: 1.insertseq_alignment
 
 genome_flanks_dir: 2.genome_flanks
 insertseq_flanks_dir: 2.insertseq_flanks
-
-genome_insertsize_stats_dir: 3.genome_insertsize_stats
+genome_insertsize_stats_dir: 2.genome_insertsize_stats
 
 bowtie2_threads: 6

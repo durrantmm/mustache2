@@ -31,11 +31,13 @@ print(INSERTSEQS)
 
 rule all:
     input:
-        expand("%s/{sample}.{genome}.{insertseq}.flanks.bam.bai" % GENOME_FLANKS_DIR, sample=SAMPLES, genome=GENOMES, insertseq=INSERTSEQS),
-        expand("%s/{sample}.{genome}.{insertseq}.noflanks.bam.bai" % GENOME_FLANKS_DIR, sample=SAMPLES, genome=GENOMES, insertseq=INSERTSEQS),
-        expand("%s/{sample}.{genome}.{insertseq}.flanks.bam.bai" % INSERTSEQ_FLANKS_DIR, sample=SAMPLES, genome=GENOMES, insertseq=INSERTSEQS),
-        expand("%s/{sample}.{genome}.{insertseq}.noflanks.bam.bai" % INSERTSEQ_FLANKS_DIR, sample=SAMPLES, genome=GENOMES, insertseq=INSERTSEQS),
-        expand("%s/{sample}.{genome}.{insertseq}.insert_size_metrics.txt" % GENOME_INSERTSIZE_STATS, sample=SAMPLES, genome=GENOMES, insertseq=INSERTSEQS)
+        expand("%s/{sample}.{genome}.insert_size_metrics.tsv" % GENOME_INSERTSIZE_STATS, sample=SAMPLES, genome=GENOMES)
+        #expand("%s/{sample}.{genome}.{insertseq}.flanks.bam.bai" % GENOME_FLANKS_DIR, sample=SAMPLES, genome=GENOMES, insertseq=INSERTSEQS),
+        #expand("%s/{sample}.{genome}.{insertseq}.noflanks.bam.bai" % GENOME_FLANKS_DIR, sample=SAMPLES, genome=GENOMES, insertseq=INSERTSEQS),
+        #expand("%s/{sample}.{genome}.{insertseq}.flanks.bam.bai" % INSERTSEQ_FLANKS_DIR, sample=SAMPLES, genome=GENOMES, insertseq=INSERTSEQS),
+        #expand("%s/{sample}.{genome}.{insertseq}.noflanks.bam.bai" % INSERTSEQ_FLANKS_DIR, sample=SAMPLES, genome=GENOMES, insertseq=INSERTSEQS),
+        #expand("%s/{sample}.{genome}.{insertseq}.insert_size_metrics.txt" % GENOME_INSERTSIZE_STATS, sample=SAMPLES, genome=GENOMES, insertseq=INSERTSEQS)
+        #expand("%s/{sample}.{genome}.complete" % GENOME_ALIGNMENT_DIR, sample=SAMPLES, genome=GENOMES),
 
 rule bowtie_build_genomes:
     input:
@@ -112,6 +114,17 @@ rule bowtie_align_insertseq:
         "mv {output.sam}.tmp {output.sam}; "
         "echo 'COMPLETE' > {output.complete}"
 
+rule get_genome_insert_size_stats:
+    input:
+        sam = "%s/{sample}.{genome}.sam" % GENOME_ALIGNMENT_DIR
+    output:
+        stats = "%s/{sample}.{genome}.insert_size_metrics.tsv" % GENOME_INSERTSIZE_STATS,
+        counts = "%s/{sample}.{genome}.insert_size_counts.tsv" % GENOME_INSERTSIZE_STATS
+    params:
+        sample='{sample}'
+    shell:
+        "python scripts/insert_size_stats.py {input.sam} {output.stats} {output.counts} {params.sample}"
+
 rule get_insertseq_flanks:
     input:
         class1 = "%s/{sample}.R1.class.gz" % CLASS_DIR,
@@ -182,15 +195,3 @@ rule samtools_index_flank_bams:
         "samtools index {input.insertseq_flanks_mate_bam}; "
         "samtools index {input.insertseq_noflanks_bam};"
 
-rule get_genome_insert_size_stats:
-    input:
-        genome_noflanks_bam= "%s/{sample}.{genome}.{insertseq}.noflanks.bam" % GENOME_FLANKS_DIR
-    output:
-        stats = "%s/{sample}.{genome}.{insertseq}.insert_size_metrics.txt" % GENOME_INSERTSIZE_STATS,
-        pdf = "%s/{sample}.{genome}.{insertseq}.insert_size_histogram.pdf" % GENOME_INSERTSIZE_STATS
-    shell:
-        "java -jar picard.jar CollectInsertSizeMetrics "
-        "I={input.genome_noflanks_bam} "
-        "O={output.stats} "
-        "H={output.pdf} "
-        "M=0.5"
