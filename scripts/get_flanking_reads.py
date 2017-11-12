@@ -421,27 +421,22 @@ def check_scenario6(sample, c1, c2, gr1, gr2, ir1, ir2, gr1_mapped, gr2_mapped, 
         print("SCENARIO 6")
 
         set_final_tags(sample, c1, c2, gr1, gr2, ir1, ir2, 6)
-        print("1")
-        gr_flank, gr_mate, ir_flank, ir_mate = gr1, gr2, gr2, gr1
-        print("2")
+        gr_flank, gr_mate, ir_flank, ir_mate = gr1, gr2, ir2, ir1
+
         if gr_left_softclipped:
             if gr_flank.cigartuples[0][1] > gr_mate.cigartuples[0][1]:
-                gr_flank, gr_mate, ir_flank, ir_mate = gr2, gr1, gr1, gr2
-        print("3")
+                gr_flank, gr_mate, ir_flank, ir_mate = gr2, gr1, ir1, ir2
+
         if gr_right_softclipped:
             if gr_flank.cigartuples[-1][1] > gr_mate.cigartuples[-1][1]:
-                gr_flank, gr_mate, ir_flank, ir_mate = gr2, gr1, gr1, gr2
-        print("4")
+                gr_flank, gr_mate, ir_flank, ir_mate = gr2, gr1, ir1, ir2
+
 
         genome_flanks_sam.write(gr_flank)
-        print("5")
         #genome_flanks_sam.write(gr_mate)
         genome_flanks_mate_sam.write(gr_mate)
-        print("6")
         insertseq_flanks_sam.write(ir_flank)
-        print("7")
         insertseq_flanks_mate_sam.write(ir_mate)
-        print("8")
 
         return True
 
